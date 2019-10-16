@@ -3,6 +3,9 @@ require('dotenv').config();
 const fetch = require('node-fetch');
 
 const app = require('express')();
+const cors = require('cors');
+
+app.use(cors());
 
 app.get('/auth', async (req, res) => {
     const code = req.query.code;
@@ -18,8 +21,8 @@ app.get('/auth', async (req, res) => {
         try {
             const response = await fetch(`${baseUrl}?code=${code}&client_id=${clientId}&client_secret=${clientSecret}&redirect_uri=${redirectUri}&grant_type=authorization_code`, { method: 'POST' });
             // console.log(response.text());
-            const json = await response.text();
-            res.send(json);
+            const json = await response.json();
+            res.redirect(`http://localhost:8080/#/authenticate/${json.access_token}`);
             // res.json(JSON.parse(json).access_token);
         } catch (e) {
             console.error(e);
@@ -85,17 +88,17 @@ app.get('/test', async (req, res) => {
 
 });
 
-app.get('/auth-callback', async (req, res) => {
+app.get('/authenticate', async (req, res) => {
+
     const baseUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
     const clientId = process.env.CLIENT_ID;
     const redirectUri = 'http://localhost:3000/auth';
     const scope = 'https://www.googleapis.com/auth/youtube.force-ssl';
     const access_type = 'online';
 
-    // const response = await fetch();
-    res.redirect(`${baseUrl}?scope=${scope}&access_type=${access_type}&client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code`);
+    res.send({ url: `${baseUrl}?scope=${scope}&access_type=${access_type}&client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code` });
 });
 
 app.listen('3000', () => {
-    console.log('Listening at localhost:3000');
+    console.log('Listening at http://localhost:3000');
 });
